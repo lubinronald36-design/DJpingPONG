@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Audio Experience</title>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #000, #2b2b2b);
+        color: #fff;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding-top: 50px;
+    }
+
+    h1 {
+        font-size: 32px;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+    }
+
+    .btn {
+        display: block;
+        width: 250px;
+        margin: 15px auto;
+        padding: 15px;
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        background: #444;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .btn:hover {
+        background: #777;
+        transform: scale(1.05);
+    }
+</style>
+</head>
+<body>
+
+<h1>🎧 Audio Control</h1>
+
+<!-- MUSIC -->
+<audio id="music" src="cue.mp3" loop></audio>
+
+<button class="btn" id="playMusic">▶ Play / Pause Music</button>
+
+<!-- VOICE BUTTONS -->
+<button class="btn voice" data-src="elp.mp3">🎤 Voice 1</button>
+<button class="btn voice" data-src="ronald.mp3">🎤 Voice 2</button>
+
+<script>
+// ---- SETTINGS ----
+const fadeSpeed = 60; // faster fade (lower = faster)
+const duckVolume = 0.15; 
+const normalVolume = 1.0;
+
+// ---- MAIN AUDIO ----
+const music = document.getElementById("music");
+const playBtn = document.getElementById("playMusic");
+
+// ---- VOICE PLAYERS ----
+let currentVoice = null;
+
+// MUSIC BUTTON
+playBtn.addEventListener("click", () => {
+    if (music.paused) {
+        music.volume = normalVolume;
+        music.play();
+    } else {
+        music.pause();
+    }
+});
+
+// FUNCTION: Fade audio
+function fadeAudio(audio, targetVolume, callback = null) {
+    let interval = setInterval(() => {
+        if (Math.abs(audio.volume - targetVolume) < 0.05) {
+            audio.volume = targetVolume;
+            clearInterval(interval);
+            if (callback) callback();
+        } else {
+            audio.volume += (audio.volume > targetVolume ? -0.05 : 0.05);
+        }
+    }, fadeSpeed);
+}
+
+// PLAY VOICE ON BUTTON PRESS
+document.querySelectorAll(".voice").forEach(btn => {
+    btn.addEventListener("click", () => {
+        // stop last voice if still playing
+        if (currentVoice && !currentVoice.paused) return;
+
+        let voice = new Audio(btn.dataset.src);
+        currentVoice = voice;
+
+        // Lower music
+        if (!music.paused) fadeAudio(music, duckVolume);
+
+        voice.play();
+
+        voice.addEventListener("ended", () => {
+            fadeAudio(music, normalVolume);
+            currentVoice = null;
+        });
+    });
+});
+</script>
+
+</body>
+</html>
