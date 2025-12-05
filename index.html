@@ -2,134 +2,269 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Audio Experience — Updated</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Neon Audio Panel</title>
 <style>
-    body {
-        background: linear-gradient(135deg, #000, #2b2b2b);
-        color: #fff;
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding-top: 50px;
-    }
+  :root{
+    --bg:#06060a;
+    --panel:#0d0d12;
+    --neon1:#00ffcc;
+    --neon2:#9b4cff;
+    --glass: rgba(255,255,255,0.03);
+    --btn-radius:14px;
+  }
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#05050a 0%,#0b0b11 100%);font-family:Inter,Arial,Helvetica,sans-serif;color:#e6f7ff}
+  .wrap{
+    max-width:960px;margin:28px auto;padding:28px;border-radius:18px;background:
+    linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    text-align:center;
+  }
+  h1{margin:0 0 14px;font-size:26px;letter-spacing:2px}
+  .subtitle{opacity:0.7;margin-bottom:18px;font-size:13px}
+  .controls{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:6px}
+  .btn{
+    min-width:170px;padding:14px 18px;border-radius:var(--btn-radius);border:0;cursor:pointer;
+    position:relative;font-weight:700;color:white;font-size:15px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    transition:transform .12s ease, box-shadow .12s ease;
+    outline: none;
+  }
+  .btn:active{transform:translateY(2px)}
+  /* neon styles */
+  .neon {
+    color: #fff;
+    text-shadow:
+      0 0 6px rgba(255,255,255,0.05),
+      0 0 12px rgba(0,0,0,0.4);
+  }
+  .neon.intro{
+    background: linear-gradient(90deg,var(--neon1),rgba(0,255,204,0.06));
+    box-shadow: 0 8px 28px rgba(0,255,204,0.06), 0 0 16px var(--neon1);
+  }
+  .neon.extra{
+    background: linear-gradient(90deg,var(--neon2),rgba(155,76,255,0.06));
+    box-shadow: 0 8px 28px rgba(155,76,255,0.06), 0 0 16px var(--neon2);
+  }
+  .neon.voice{
+    background: linear-gradient(90deg,#00ffd1 40%, #6a4bff 100%);
+    box-shadow: 0 8px 28px rgba(100,70,255,0.06), 0 0 18px rgba(0,255,209,0.12);
+  }
+  .label{
+    display:block;font-size:12px;opacity:.85;margin-bottom:6px;
+  }
 
-    h1 {
-        font-size: 32px;
-        margin-bottom: 30px;
-        text-transform: uppercase;
-        letter-spacing: 3px;
-    }
-
-    .btn {
-        display: block;
-        width: 250px;
-        margin: 15px auto;
-        padding: 15px;
-        font-size: 20px;
-        font-weight: bold;
-        color: white;
-        background: #444;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .btn:hover {
-        background: #777;
-        transform: scale(1.05);
-    }
-
-    .note { font-size: 12px; opacity: 0.8; margin-top: 6px; }
+  .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+  .status{
+    margin-top:16px;font-size:13px;color:#bfeee0;opacity:.95;
+  }
+  .small{font-size:12px;opacity:.7}
+  @media (max-width:520px){
+    .btn{min-width:140px;font-size:14px;padding:12px}
+  }
 </style>
 </head>
 <body>
+  <div class="wrap">
+    <h1 class="neon">Neon Audio Panel</h1>
+    <div class="subtitle">Your setup — two music tracks and three voice tracks. Play / Pause each one. Voice tracks duck the background while they play.</div>
 
-<h1>🎧 Audio Control</h1>
+    <!-- NOTE: replace background.mp3 with your actual background looping music filename if different -->
+    <div class="label">Background (looping)</div>
+    <div class="row">
+      <button id="bgBtn" class="btn neon intro">▶ Play / Pause Background</button>
+    </div>
 
-<!-- MAIN BACKGROUND MUSIC -->
-<audio id="music" src="cue.mp3" loop></audio>
-<button class="btn" id="playMusic">▶ Play / Pause Music</button>
+    <div style="height:14px"></div>
 
-<!-- UPDATED BUTTONS -->
-<button class="btn voice" data-voice="elp.mp3" data-extra="cue2.mp3">🎤 Voice 1</button>
-<button class="btn voice" data-voice="ronald.mp3" data-extra="voice3.mp3">🎤 Voice 2</button>
+    <div class="label">Music tracks (play/pause — no fade)</div>
+    <div class="controls">
+      <button data-file="cue.mp3" id="introBtn" class="btn neon intro">Intro (cue.mp3)</button>
+      <button data-file="cue2.mp3" id="extraBtn" class="btn neon extra">Extra (cue2.mp3)</button>
+    </div>
 
-<p class="note">Files required: cue.mp3, elp.mp3, ronald.mp3, cue2.mp3, voice3.mp3</p>
+    <div style="height:12px"></div>
+
+    <div class="label">Voice tracks (play/pause — will duck background)</div>
+    <div class="controls">
+      <button data-file="elp.mp3" id="vbBtn" class="btn neon voice">VB (elp.mp3)</button>
+      <button data-file="ronald.mp3" id="vb1Btn" class="btn neon voice">VB1 (ronald.mp3)</button>
+      <button data-file="voice3.mp3" id="vb2Btn" class="btn neon voice">VB2 (voice3.mp3)</button>
+    </div>
+
+    <div class="status" id="status">Status: Ready</div>
+    <div class="small" style="margin-top:8px">Place these files in the same folder: <code>background.mp3</code>, <code>cue.mp3</code>, <code>cue2.mp3</code>, <code>elp.mp3</code>, <code>ronald.mp3</code>, <code>voice3.mp3</code>. Replace <code>background.mp3</code> if your main loop has a different name.</div>
+  </div>
 
 <script>
-/* ------- AUDIO SETTINGS ------- */
-const fadeIntervalMs = 40;
-const fadeStep = 0.12;
-const duckVolume = 0.15;
-const normalVolume = 1.0;
+/* ======================
+   Configuration / files
+   ====================== */
 
-/* ------- ELEMENTS ------- */
-const music = document.getElementById('music');
-const playMusicBtn = document.getElementById('playMusic');
+// Background looping music file (replace the name below if your main loop file has a different name)
+const BACKGROUND_FILE = "background.mp3";
 
-playMusicBtn.addEventListener('click', () => {
-    if (music.paused) {
-        music.volume = normalVolume;
-        music.play().catch(()=>{});
-    } else {
-        music.pause();
+// Files (must exist in same folder)
+const MUSIC_FILES = {
+  intro: "cue.mp3",   // Intro button
+  extra: "cue2.mp3"   // Extra button
+};
+const VOICE_FILES = {
+  vb: "elp.mp3",
+  vb1: "ronald.mp3",
+  vb2: "voice3.mp3"
+};
+
+/* ======================
+   Audio objects
+   ====================== */
+
+const background = new Audio(BACKGROUND_FILE);
+background.loop = true;
+background.volume = 1.0; // normal
+
+// music players (no fade)
+const introPlayer = new Audio(MUSIC_FILES.intro);
+const extraPlayer = new Audio(MUSIC_FILES.extra);
+
+// voice players (these will duck the background while playing)
+const vbPlayer = new Audio(VOICE_FILES.vb);
+const vb1Player = new Audio(VOICE_FILES.vb1);
+const vb2Player = new Audio(VOICE_FILES.vb2);
+
+// Keep players in a map for toggle behavior
+const musicMap = {
+  introBtn: introPlayer,
+  extraBtn: extraPlayer
+};
+const voiceMap = {
+  vbBtn: vbPlayer,
+  vb1Btn: vb1Player,
+  vb2Btn: vb2Player
+};
+
+/* ======================
+   Fade helpers
+   ====================== */
+let fadeInterval = null;
+function fadeTo(targetVolume, done) {
+  clearInterval(fadeInterval);
+  fadeInterval = setInterval(() => {
+    const cur = background.volume;
+    // step size adjusts speed
+    const step = 0.08;
+    if (Math.abs(cur - targetVolume) <= 0.02) {
+      background.volume = Math.max(0, Math.min(1, targetVolume));
+      clearInterval(fadeInterval);
+      fadeInterval = null;
+      if (done) done();
+      return;
     }
-});
-
-/* Smooth fade */
-function fadeTo(audio, target, callback) {
-    target = Math.max(0, Math.min(1, target));
-    const step = audio.volume > target ? -fadeStep : fadeStep;
-
-    const timer = setInterval(() => {
-        audio.volume = Math.max(0, Math.min(1, audio.volume + step));
-        if ((step < 0 && audio.volume <= target) || (step > 0 && audio.volume >= target)) {
-            audio.volume = target;
-            clearInterval(timer);
-            if (callback) callback();
-        }
-    }, fadeIntervalMs);
+    background.volume = Math.max(0, Math.min(1, cur + (cur < targetVolume ? step : -step)));
+  }, 40); // faster/strong neon feel
 }
 
-let activeGroups = [];
+/* Keep track of active voice players currently playing (count) */
+let activeVoiceCount = 0;
 
-document.querySelectorAll('.voice').forEach(btn => {
-    btn.addEventListener('click', async () => {
+/* ======================
+   Utility: update status
+   ====================== */
+const statusEl = document.getElementById("status");
+function setStatus(text){
+  statusEl.textContent = "Status: " + text;
+}
 
-        // prevent button spam (optional safety)
-        if (activeGroups.some(g => !g.finished)) return;
+/* ======================
+   Background Play/Pause
+   ====================== */
+const bgBtn = document.getElementById("bgBtn");
+bgBtn.addEventListener("click", async () => {
+  if (background.paused) {
+    try { await background.play(); setStatus("Background playing"); }
+    catch(e){ setStatus("Autoplay blocked — tap any button to allow audio"); }
+  } else {
+    background.pause();
+    setStatus("Background paused");
+  }
+});
 
-        if (music.paused) {
-            try { await music.play(); } catch(e){}
-        }
+/* ======================
+   Music buttons (no fade)
+   ====================== */
+document.getElementById("introBtn").addEventListener("click", toggleSimplePlayer);
+document.getElementById("extraBtn").addEventListener("click", toggleSimplePlayer);
 
-        const voice = new Audio(btn.dataset.voice);
-        const extra = new Audio(btn.dataset.extra);
+function toggleSimplePlayer(e){
+  const id = e.currentTarget.id;
+  const p = musicMap[id];
+  if (!p) return;
+  if (p.paused) {
+    p.currentTime = 0; // always start fresh
+    p.play().catch(()=>{setStatus("Playback blocked — tap background first");});
+    setStatus(id + " playing");
+  } else {
+    p.pause();
+    setStatus(id + " paused");
+  }
+}
 
-        voice.volume = 1.0;
-        extra.volume = 1.0;
+/* ======================
+   Voice buttons (duck background while playing)
+   ====================== */
+document.getElementById("vbBtn").addEventListener("click", () => toggleVoice("vbBtn"));
+document.getElementById("vb1Btn").addEventListener("click", () => toggleVoice("vb1Btn"));
+document.getElementById("vb2Btn").addEventListener("click", () => toggleVoice("vb2Btn"));
 
-        let group = { finished:false };
-        activeGroups.push(group);
+function toggleVoice(id) {
+  const player = voiceMap[id];
+  if (!player) return;
 
-        let finishedCount = 0;
-        const checkDone = () => {
-            finishedCount++;
-            if (finishedCount === 2) {
-                group.finished = true;
-                activeGroups = activeGroups.filter(g=>!g.finished);
+  if (player.paused) {
+    // Start playing: if it's playing elsewhere reset to 0 for fresh start
+    player.currentTime = 0;
+    player.play().catch(()=>{setStatus("Playback blocked — tap background first");});
+    // If this is the first active voice, duck the background
+    activeVoiceCount++;
+    if (activeVoiceCount === 1) fadeTo(0.15);
+    setStatus(id + " playing");
+    // When it ends naturally, handle cleanup
+    player.onended = () => {
+      handleVoiceEnded(id);
+    };
+  } else {
+    // Pause the voice (user controlled)
+    player.pause();
+    // we consider paused voices as not active -> reduce count if it was playing
+    if (activeVoiceCount > 0) activeVoiceCount--;
+    if (activeVoiceCount <= 0) {
+      activeVoiceCount = 0;
+      fadeTo(1.0);
+    }
+    setStatus(id + " paused");
+  }
+}
 
-                if (activeGroups.length === 0) fadeTo(music, normalVolume);
-            }
-        };
+function handleVoiceEnded(id) {
+  // reduce active count (ended)
+  if (activeVoiceCount > 0) activeVoiceCount--;
+  if (activeVoiceCount <= 0) {
+    activeVoiceCount = 0;
+    fadeTo(1.0);
+  }
+  setStatus(id + " ended");
+}
 
-        voice.onended = checkDone;
-        extra.onended = checkDone;
-
-        fadeTo(music, duckVolume);
-        voice.play().catch(()=>{});
-        extra.play().catch(()=>{});
-    });
+/* ======================
+   Safety: reset players on page unload
+   ====================== */
+window.addEventListener("beforeunload", () => {
+  try {
+    background.pause();
+    Object.values(musicMap).forEach(p=>p.pause());
+    Object.values(voiceMap).forEach(p=>p.pause());
+  } catch(e){}
 });
 </script>
 </body>
