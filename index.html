@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Audio Experience</title>
-
+<meta charset="utf-8" />
+<title>Audio Experience — Updated</title>
 <style>
     body {
         background: linear-gradient(135deg, #000, #2b2b2b);
@@ -39,78 +38,99 @@
         background: #777;
         transform: scale(1.05);
     }
+
+    .note { font-size: 12px; opacity: 0.8; margin-top: 6px; }
 </style>
 </head>
 <body>
 
 <h1>🎧 Audio Control</h1>
 
-<!-- MUSIC -->
+<!-- MAIN BACKGROUND MUSIC -->
 <audio id="music" src="cue.mp3" loop></audio>
-
 <button class="btn" id="playMusic">▶ Play / Pause Music</button>
 
-<!-- VOICE BUTTONS -->
-<button class="btn voice" data-src="elp.mp3">🎤 Voice 1</button>
-<button class="btn voice" data-src="ronald.mp3">🎤 Voice 2</button>
+<!-- UPDATED BUTTONS -->
+<button class="btn voice" data-voice="elp.mp3" data-extra="cue2.mp3">🎤 Voice 1</button>
+<button class="btn voice" data-voice="ronald.mp3" data-extra="voice3.mp3">🎤 Voice 2</button>
+
+<p class="note">Files required: cue.mp3, elp.mp3, ronald.mp3, cue2.mp3, voice3.mp3</p>
 
 <script>
-// ---- SETTINGS ----
-const fadeSpeed = 60; // faster fade (lower = faster)
-const duckVolume = 0.15; 
+/* ------- AUDIO SETTINGS ------- */
+const fadeIntervalMs = 40;
+const fadeStep = 0.12;
+const duckVolume = 0.15;
 const normalVolume = 1.0;
 
-// ---- MAIN AUDIO ----
-const music = document.getElementById("music");
-const playBtn = document.getElementById("playMusic");
+/* ------- ELEMENTS ------- */
+const music = document.getElementById('music');
+const playMusicBtn = document.getElementById('playMusic');
 
-// ---- VOICE PLAYERS ----
-let currentVoice = null;
-
-// MUSIC BUTTON
-playBtn.addEventListener("click", () => {
+playMusicBtn.addEventListener('click', () => {
     if (music.paused) {
         music.volume = normalVolume;
-        music.play();
+        music.play().catch(()=>{});
     } else {
         music.pause();
     }
 });
 
-// FUNCTION: Fade audio
-function fadeAudio(audio, targetVolume, callback = null) {
-    let interval = setInterval(() => {
-        if (Math.abs(audio.volume - targetVolume) < 0.05) {
-            audio.volume = targetVolume;
-            clearInterval(interval);
+/* Smooth fade */
+function fadeTo(audio, target, callback) {
+    target = Math.max(0, Math.min(1, target));
+    const step = audio.volume > target ? -fadeStep : fadeStep;
+
+    const timer = setInterval(() => {
+        audio.volume = Math.max(0, Math.min(1, audio.volume + step));
+        if ((step < 0 && audio.volume <= target) || (step > 0 && audio.volume >= target)) {
+            audio.volume = target;
+            clearInterval(timer);
             if (callback) callback();
-        } else {
-            audio.volume += (audio.volume > targetVolume ? -0.05 : 0.05);
         }
-    }, fadeSpeed);
+    }, fadeIntervalMs);
 }
 
-// PLAY VOICE ON BUTTON PRESS
-document.querySelectorAll(".voice").forEach(btn => {
-    btn.addEventListener("click", () => {
-        // stop last voice if still playing
-        if (currentVoice && !currentVoice.paused) return;
+let activeGroups = [];
 
-        let voice = new Audio(btn.dataset.src);
-        currentVoice = voice;
+document.querySelectorAll('.voice').forEach(btn => {
+    btn.addEventListener('click', async () => {
 
-        // Lower music
-        if (!music.paused) fadeAudio(music, duckVolume);
+        // prevent button spam (optional safety)
+        if (activeGroups.some(g => !g.finished)) return;
 
-        voice.play();
+        if (music.paused) {
+            try { await music.play(); } catch(e){}
+        }
 
-        voice.addEventListener("ended", () => {
-            fadeAudio(music, normalVolume);
-            currentVoice = null;
-        });
+        const voice = new Audio(btn.dataset.voice);
+        const extra = new Audio(btn.dataset.extra);
+
+        voice.volume = 1.0;
+        extra.volume = 1.0;
+
+        let group = { finished:false };
+        activeGroups.push(group);
+
+        let finishedCount = 0;
+        const checkDone = () => {
+            finishedCount++;
+            if (finishedCount === 2) {
+                group.finished = true;
+                activeGroups = activeGroups.filter(g=>!g.finished);
+
+                if (activeGroups.length === 0) fadeTo(music, normalVolume);
+            }
+        };
+
+        voice.onended = checkDone;
+        extra.onended = checkDone;
+
+        fadeTo(music, duckVolume);
+        voice.play().catch(()=>{});
+        extra.play().catch(()=>{});
     });
 });
 </script>
-
 </body>
 </html>
